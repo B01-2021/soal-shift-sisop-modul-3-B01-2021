@@ -9,7 +9,7 @@
 
 void main()
 {
-    int i, j, k, num;
+    int i, j, k;
     int size_m1[2], size_m2[2];
 
     // matriks 1 [row = 4, col = 3]
@@ -22,16 +22,15 @@ void main()
     size_m2[1] = 6; 
     int m2[size_m2[0]][size_m2[1]];
 
-    srand(time(0));
-    int upper = 20;
-    int lower = 1;
+    // srand(time(0));
+    // int upper = 20;
+    // int lower = 1;
 
     for (i = 0; i < size_m1[0]; i++)
     {
         for (j = 0; j < size_m1[1]; j++)
         {
-            scanf("%d", &num);
-            m1[i][j] = num;
+            scanf("%d", &m1[i][j]);
         }
     }
 
@@ -39,8 +38,7 @@ void main()
     {
         for (j = 0; j < size_m2[1]; j++)
         {
-            scanf("%d", &num);
-            m2[i][j] = num;
+            scanf("%d", &m2[i][j]); 
         }
     }
 
@@ -74,4 +72,6 @@ void main()
         }
         printf("\n");
     }
+
+    shmdt((void *) value);
 }
