@@ -59,6 +59,7 @@ void main()
     int shm_id = shmget(key, sizeof(int[size_m1[0]][size_m2[1]]), IPC_CREAT | 0666);
     value = shmat(shm_id, NULL, 0);
 
+    printf("\nMultiplication Result Matrix : \n");
     for (i = 0; i < size_m1[0]; i++)
     {
         for (j = 0; j < size_m2[1]; j++)

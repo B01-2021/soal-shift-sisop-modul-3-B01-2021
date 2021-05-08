@@ -63,6 +63,17 @@ void main()
     int shm_id = shmget(key, sizeof(int[size_m[0]][size_m[1]]), IPC_CREAT | 0666);
     value = shmat(shm_id, NULL, 0);
 
+    printf("\nShared Memory Matrix : \n");
+    for (i = 0; i < size_m[0]; i++)
+    {
+        for (j = 0; j < size_m[1]; j++)
+        {
+            printf("%-2d ", value[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+
     int count = 0;
     pthread_t t_id[size_m[0] * size_m[1]];
     for (i = 0; i < size_m[0]; i++)
