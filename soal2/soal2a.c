@@ -22,10 +22,6 @@ void main()
     size_m2[1] = 6; 
     int m2[size_m2[0]][size_m2[1]];
 
-    // srand(time(0));
-    // int upper = 20;
-    // int lower = 1;
-
     for (i = 0; i < size_m1[0]; i++)
     {
         for (j = 0; j < size_m1[1]; j++)

@@ -20,12 +20,17 @@ static void exec_command(int n_argv, char ***argvs)
         pipes input;
 
         if (pipe(input) != 0)
+        {
             exit(1);
+        }
             
         pid = fork();
         if (pid < 0)
+        {
             exit(1);
-        if (pid == 0) {
+        }
+        if (pid == 0) 
+        {
             exec_pipe(n_argv - 1, argvs, input); 
         }
 

@@ -73,6 +73,7 @@ void main()
             data[0] = i;
             data[1] = j;
             data[2] = m[i][j];
+
             pthread_create(&t_id[count], NULL, fact_result, (void *)data);
 
             pthread_join(t_id[count++], NULL);
@@ -91,5 +92,5 @@ void main()
 
     shmdt(value);
     shmctl(shm_id, IPC_RMID, NULL);
-    exit(EXIT_SUCCESS);
+    exit(0);
 }
