@@ -39,7 +39,7 @@ int main(int argc, char const *argv[]) {
     char pilihan1[1024] = {0};
     char input_akun[1024] = {0};
 
-    char *path = "/home/bunga/modul-3";
+    char *path = "/home/bunga/soal-shift-sisop-modul-3-B01-2021/soal1";
       
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
