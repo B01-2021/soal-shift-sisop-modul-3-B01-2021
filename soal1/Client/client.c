@@ -13,7 +13,6 @@ int main(int argc, char const *argv[]) {
     struct sockaddr_in serv_addr;
 
     char buffer[1024] = {0};
-    char download[1024] = {0};
     char login_status[1024] = {0};
 
     char pilihan[100];
@@ -177,6 +176,7 @@ int main(int argc, char const *argv[]) {
         }
         if(pilihan[0]=='d' && pilihan[1]=='o'){
             char nama[100];
+            char download[1024] = {0};
             scanf("%s", nama);
             
             //kirim nama file yang ingin di download

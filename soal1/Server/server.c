@@ -36,11 +36,8 @@ int main(int argc, char const *argv[]) {
     char buffer[1024] = {0};
     char id[1024] = {0};
     char pass[1024] = {0};
-    char pilihan[1024] = {0};
+    char pilihan1[1024] = {0};
     char input_akun[1024] = {0};
-    char nama[1024] = {0};
-    char word[1024] = {0};
-    char file[1024] = {0};
 
     char *path = "/home/bunga/modul-3";
       
@@ -76,10 +73,10 @@ int main(int argc, char const *argv[]) {
     FILE *fakun, *ffiles, *fptr1, *fptr2;
 
     //ambil pilihan register atau login dari client
-    valread = read( new_socket , pilihan, 1024);
+    valread = read( new_socket , pilihan1, 1024);
     //ambil id dan pass
     valread = read( new_socket , input_akun, 1024);
-    if(pilihan[0]=='r'){
+    if(pilihan1[0]=='r'){
         fakun= fopen("akun.txt","a");
 
         //input id dan pass akun baru
@@ -110,6 +107,7 @@ int main(int argc, char const *argv[]) {
     }
 
     while(1){
+        char pilihan[1024] = {0};
         //ambil perintah dari client
         valread = read( new_socket , pilihan, 1024);
 
@@ -183,6 +181,7 @@ int main(int argc, char const *argv[]) {
         }
         if(pilihan[0]=='d' && pilihan[1]=='e'){
             char filepath[100], filepath2[100];
+            char nama[1024] = {0};
 
             //ambil nama file yang mau didelete dari client
             valread = read( new_socket , nama, 1024);
@@ -224,6 +223,7 @@ int main(int argc, char const *argv[]) {
             }
         }
         if(pilihan[0]=='f'){
+            char word[1024] = {0};
             char line[1024];
             //ambil kata yang di cari client
             valread = read( new_socket , word, 1024);
@@ -241,6 +241,7 @@ int main(int argc, char const *argv[]) {
         if(pilihan[0]=='d' && pilihan[1]=='o'){
             char line[1024];
             int ada=0;
+            char file[1024] = {0};
             //ambil nama file yang ingin didownload client
             valread = read( new_socket , file, 1024);
             
