@@ -44,7 +44,6 @@ void * cthread(void *arg)
     char *name;
     strcpy(name, arg);
     categorize(name);
-    pthread_exit(0);
 }
 
 void listFiles(char *path)
@@ -77,6 +76,13 @@ void listFiles(char *path)
         else if (dp->d_name[0] != '.')
             listFiles(fpath);
     }
+
+    for (size_t i = 0; i < threads; i++)
+    {
+        pthread_join(tid[i], NULL);
+    }
+
+
 
 }
 
