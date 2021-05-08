@@ -191,6 +191,7 @@ int main(int argc, char const *argv[]) {
                 strcpy(path1, download);
                 strcat(path1, "/Server/FILES/");
                 strcat(path1, nama);
+
                 //open file mula-mula
                 fptr1 = fopen(path1, "r");
                 if(!fptr1)

@@ -23,6 +23,8 @@ char addRunning(char* isi1, char* isi2, char* isi3){
 
     fputs(isi, frunning);
     fputs("\n", frunning);
+    fflush(frunning);
+    fclose(frunning);
 
 }
 
@@ -36,7 +38,6 @@ int main(int argc, char const *argv[]) {
     char pass[1024] = {0};
     char pilihan[1024] = {0};
     char input_akun[1024] = {0};
-    char input_file[1024] = {0};
     char nama[1024] = {0};
     char word[1024] = {0};
     char file[1024] = {0};
@@ -113,13 +114,8 @@ int main(int argc, char const *argv[]) {
         valread = read( new_socket , pilihan, 1024);
 
         if(pilihan[0]=='a'){
-            char filepath2[100], filepath[100], nama[100];
-            char* hasil = strchr(input_file, ',');
-            long int posisi, posisi1;
-            posisi1 = hasil - input_file+1;
-
-
             //ambil input nama, publisher, tahun publikasi, ekstensi, filepath
+            char input_file[1024] = {0};
             valread = read( new_socket , input_file, 1024);
 
             //tambah file di files.tsv
@@ -131,6 +127,10 @@ int main(int argc, char const *argv[]) {
             fclose(ffiles);
 
             //ambil tiap variabel yang dipisahin ','
+            char filepath2[100], filepath[100], nama[100];
+            char* hasil = strchr(input_file, ',');
+            long int posisi, posisi1;
+            posisi1 = hasil - input_file+1;
             while(hasil != NULL){
                 posisi = hasil - input_file+1;
                 hasil = strchr(hasil+1, ',');
@@ -166,6 +166,7 @@ int main(int argc, char const *argv[]) {
             //open file tujuan
             strcpy(filepath2, "FILES/");
             strcat(filepath2, nama);
+
             fptr2 = fopen(filepath2, "a");
             if(!fptr2)
                 printf("fptr2 eror\n");    
@@ -247,10 +248,11 @@ int main(int argc, char const *argv[]) {
             FILE* srcFile = fopen("files.tsv", "r");
             while (fgets(line , sizeof(line) , srcFile )!= NULL)
             {   
-                if (strstr(line , file)!= NULL){
+                if (strstr(line , file)!= NULL && !ada ){
                     line[strlen(line)]='\0';
                     ada=1;
                     send(new_socket , path , strlen(path) , 0 );
+                    break;
                 }
             }
             if(!ada){
