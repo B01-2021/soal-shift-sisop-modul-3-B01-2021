@@ -7,9 +7,6 @@
 #include <time.h>
 #include <unistd.h>
 
-pthread_t tid[3];
-pid_t child;
-
 int (* value)[6] = {0};
 
 void * fact_result(void * arr)
@@ -59,15 +56,6 @@ void main()
             scanf("%d", &m[i][j]);
         }
     }
-
-    // for (i = 0; i < size_m[0]; i++)
-    // {
-    //     for (j = 0; j < size_m[1]; j++)
-    //     {
-    //         printf("%d ", m[i][j]);
-    //     }
-    //     printf("\n");
-    // }
 
     // shared memory
     key_t key = 1234;
