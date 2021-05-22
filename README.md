@@ -17,8 +17,7 @@ Kelompok B01:
 
 # Soal 1
 ## Perintah 'add'
-Mengcopy perkarakter file text dari pathfile yang diinput ke file baru yang dimasukkan ke dalam direktori `Server/FILES/nanafile.ekstensi`
-lalu membuat sebuah string yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) yang kemudian di mamsukkan ke file `files.tsv` sebagai sebuah baris
+client mengirim string input_file yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) ke server
 
 ```
 if(pilihan[0]=='a'){
@@ -62,6 +61,78 @@ if(pilihan[0]=='a'){
             strcat(input_file, filepath);
             input_file[strlen(input_file)] = '\0';
             send(sock , input_file, strlen(input_file) , 0 );
+        }
+```
+
+server menerima string input_file lalu memasukkan ke dalam file files.tsv lalu mengambil bagian filepath untuk mengcopy tiap karakter yang ada pada file tersebut ke sebuah file baru di Server/FILES/namafile.ekstensi kemudian mengisi file running.log dengan fungsi yang telah dibuat
+```
+if(pilihan[0]=='a'){
+            //ambil input nama, publisher, tahun publikasi, ekstensi, filepath
+            char input_file[1024] = {0};
+            valread = read( new_socket , input_file, 1024);
+
+            //tambah file di files.tsv
+            ffiles= fopen("files.tsv","a");
+            fputs(input_file, ffiles);
+            fputs("\n", ffiles);
+            printf("%s\n", input_file);
+            fflush(ffiles);
+            fclose(ffiles);
+
+            //ambil tiap variabel yang dipisahin ','
+            char filepath2[100], filepath[100], nama[100];
+            char* hasil = strchr(input_file, ',');
+            long int posisi, posisi1;
+            posisi1 = hasil - input_file+1;
+            while(hasil != NULL){
+                posisi = hasil - input_file+1;
+                hasil = strchr(hasil+1, ',');
+            }
+    
+            // mendapat variabel nama dalam input_file
+            int ii=0;
+            for(int i = 0; i<posisi1-1; i++){
+                nama[ii++] = input_file[i];
+
+            }
+            nama[ii]='\0';
+
+            // mendapat variabel filepath dalam input file
+            ii=0;
+            for(int i = posisi; i<strlen(input_file); i++){
+                filepath[ii++] = input_file[i];
+
+            }
+            filepath[ii]='\0';
+
+            //cek udah ada folder FILES blm
+            DIR* dir = opendir("FILES");
+            if (!dir){
+                int check = mkdir("FILES",0777);
+            }
+
+            //open file mula-mula
+            fptr1 = fopen(filepath, "r");
+            if(!fptr1)
+                printf("fptr1 eror\n");
+
+            //open file tujuan
+            strcpy(filepath2, "FILES/");
+            strcat(filepath2, nama);
+
+            fptr2 = fopen(filepath2, "a");
+            if(!fptr2)
+                printf("fptr2 eror\n");    
+
+            //copy
+            char c = fgetc(fptr1);
+            while (c != EOF)
+            {
+                fputc(c, fptr2);
+                c = fgetc(fptr1);
+            }
+            //tambah running.log
+            addRunning("Tambah", nama, input_akun);
         }
 ```
 
