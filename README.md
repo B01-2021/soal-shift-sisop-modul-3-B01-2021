@@ -11,6 +11,9 @@ Kelompok B01:
 
 ### Rangkuman Jawaban 
 - [Soal 1](https://github.com/B01-2021/soal-shift-sisop-modul-3-B01-2021/blob/main/soal1/)
+*** perintah 'add'
+mengcopy perkarakter file text dari pathfile yang diinput ke file baru yang dimasukkan ke dalam direktori Server/FILES/nanafile.ekstensi
+
 - [Soal 2](https://github.com/B01-2021/soal-shift-sisop-modul-3-B01-2021/blob/main/soal2/)
 - [Soal 3](https://github.com/B01-2021/soal-shift-sisop-modul-3-B01-2021/blob/main/soal3/)
 ---
