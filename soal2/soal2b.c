@@ -7,20 +7,20 @@
 #include <time.h>
 #include <unistd.h>
 
-int (* value)[6] = {0};
+long long (* value)[6] = {0};
 
 void * fact_result(void * arr)
 {
     int i;
-    int *data = (int *)arr;
+    long long *data = (long long *)arr;
     if (data[2] == 0) 
     {
         value[data[0]][data[1]] = 0;
     }
     else 
     {
-        int x = value[data[0]][data[1]];
-        int fact = x;
+        long long x = value[data[0]][data[1]];
+        long long fact = x;
 
         for (i = 0; i < data[2]; i++)
         {
@@ -42,25 +42,25 @@ void * fact_result(void * arr)
 void main()
 {
     int i, j, k, num;
-    int size_m[2];
+    long long size_m[2];
 
     // matriks result [row = 4, col = 6]
     size_m[0] = 4; 
     size_m[1] = 6; 
-    int m[size_m[0]][size_m[1]];
+    long long m[size_m[0]][size_m[1]];
 
     for (i = 0; i < size_m[0]; i++)
     {
         for (j = 0; j < size_m[1]; j++)
         {
-            scanf("%d", &m[i][j]);
+            scanf("%lld", &m[i][j]);
         }
     }
 
     // shared memory
     key_t key = 1234;
 
-    int shm_id = shmget(key, sizeof(int[size_m[0]][size_m[1]]), IPC_CREAT | 0666);
+    int shm_id = shmget(key, sizeof(long long[size_m[0]][size_m[1]]), IPC_CREAT | 0666);
     value = shmat(shm_id, NULL, 0);
 
     printf("\nShared Memory Matrix : \n");
@@ -68,7 +68,7 @@ void main()
     {
         for (j = 0; j < size_m[1]; j++)
         {
-            printf("%-2d ", value[i][j]);
+            printf("%-2lld ", value[i][j]);
         }
         printf("\n");
     }
@@ -80,7 +80,7 @@ void main()
     {
         for (j = 0; j < size_m[1]; j++)
         {
-            int data[3];
+            long long data[3];
             data[0] = i;
             data[1] = j;
             data[2] = m[i][j];
@@ -96,7 +96,7 @@ void main()
     {
         for (j = 0; j < size_m[1]; j++)
         {
-            printf("%-2d ", value[i][j]);
+            printf("%-2lld ", value[i][j]);
         }
         printf("\n");
     }
