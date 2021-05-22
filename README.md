@@ -20,6 +20,51 @@ Kelompok B01:
 Mengcopy perkarakter file text dari pathfile yang diinput ke file baru yang dimasukkan ke dalam direktori `Server/FILES/nanafile.ekstensi`
 lalu membuat sebuah string yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) yang kemudian di mamsukkan ke file `files.tsv` sebagai sebuah baris
 
+```
+if(pilihan[0]=='a'){
+            char input_file[200];
+            char publisher[100], tahun[100], filepath[100], nama[100], ekstensi[100];
+            long int posisi;
+            //ambil variabel2 yang mai diinput
+            printf("Publisher : ");
+            scanf("%s", publisher);
+            printf("Tahun Publikasi: ");
+            scanf("%s", tahun);
+            printf("Filepath : ");
+            scanf("%s", filepath);
+
+            //mengambil nama dan ekstensi dari pathfile
+            char* hasil = strchr(filepath, '/');
+            while(hasil != NULL){
+                posisi = hasil - filepath+1;
+                hasil = strchr(hasil+1, '/');
+            }
+            int ii=0, jj=0, eks=0;
+            for(int i= posisi; i<strlen(filepath); i++){
+                nama[ii++] = filepath[i];
+                if(eks)
+                    ekstensi[jj++]=filepath[i];
+                if (filepath[i]=='.')
+                    eks=1;
+            }
+            nama[ii]='\0';
+            ekstensi[jj]='\0';
+
+            //menyusun input_file lalu kirim ke server
+            strcpy(input_file, nama);
+            strcat(input_file, ",");
+            strcat(input_file, publisher);
+            strcat(input_file, ",");
+            strcat(input_file, tahun);
+            strcat(input_file, ",");
+            strcat(input_file, ekstensi);
+            strcat(input_file, ",");
+            strcat(input_file, filepath);
+            input_file[strlen(input_file)] = '\0';
+            send(sock , input_file, strlen(input_file) , 0 );
+        }
+```
+
 ## Perintah 'see'
 Memasukkan isi `files.tsv` ke dalam sebuah string lalu kirim ke client untuk di cetak sesuai format keluaran.
 
