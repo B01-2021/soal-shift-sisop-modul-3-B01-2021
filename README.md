@@ -16,7 +16,59 @@ Kelompok B01:
 ---
 
 # Soal 1
-## Perintah 'add'
+## Data akun
+client mengirim ke server string input_akun yang berisi id dan password
+```
+ printf("Masukkan id : ");
+    scanf("%s", id);
+    printf("Masukkan pass : ");
+    scanf("%s", pass);
+    strcpy(input_akun, id);
+    strcat(input_akun, ":");
+    strcat(input_akun, pass);
+    input_akun[strlen(input_akun)] = '\0';
+    send(sock , input_akun , strlen(input_akun) , 0 );
+```
+
+Jika `register` memasukkan string input_akun dari client ke file akun.txt
+
+Jika `login` server mengecek apakah string input_akun tersebut ada dalam list akun di file akun.txt
+```
+//ambil pilihan register atau login dari client
+    valread = read( new_socket , pilihan1, 1024);
+    //ambil id dan pass
+    valread = read( new_socket , input_akun, 1024);
+    if(pilihan1[0]=='r'){
+        fakun= fopen("akun.txt","a");
+
+        //input id dan pass akun baru
+        fputs(input_akun, fakun);
+        fputs("\n", fakun);
+        fflush(fakun);
+        fclose(fakun);
+    }
+    else{
+        char line[1024];
+        int ada=0;
+
+        //cek id dan pass sama 
+        FILE* srcFile = fopen("akun.txt", "r");
+        while (fgets(line , sizeof(line) , srcFile )!= NULL)
+        {   
+            if (strstr(line , input_akun) != NULL)
+                ada=1;
+        }
+
+        if(ada)
+            send(new_socket , "berhasil", 8 , 0 );
+        else{
+            send(new_socket , "gagal", 5 , 0 );
+            return 0;
+        }
+            
+    }
+```
+## Perintah `add`
 client mengirim string input_file yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) ke server
 
 ```
@@ -136,9 +188,239 @@ if(pilihan[0]=='a'){
         }
 ```
 
-## Perintah 'see'
-Memasukkan isi `files.tsv` ke dalam sebuah string lalu kirim ke client untuk di cetak sesuai format keluaran.
+## Perintah `download`
+server menerima nama file yang ingin di download dari client kemudian mengirim filepath file yang diinginkan diambil dari `files.tsv`
+```
+if(pilihan[0]=='d' && pilihan[1]=='o'){
+            char line[1024];
+            int ada=0;
+            char file[1024] = {0};
+            //ambil nama file yang ingin didownload client
+            valread = read( new_socket , file, 1024);
+            
+            //cek apakah ada file ituuu
+            FILE* srcFile = fopen("files.tsv", "r");
+            while (fgets(line , sizeof(line) , srcFile )!= NULL)
+            {   
+                if (strstr(line , file)!= NULL && !ada ){
+                    line[strlen(line)]='\0';
+                    ada=1;
+                    send(new_socket , path , strlen(path) , 0 );
+                    break;
+                }
+            }
+            if(!ada){
+                char *pesan = "File tidak ada";
+                send(new_socket , pesan, strlen(pesan) , 0 );
+            }
+        }
+```
 
+client menerima filepath dari file yang ingin didownload, lalu mengcopy tiap karakter dari file tersebut ke file baru yang dibuat di direktori Client sesuai namafile.ekstensi
+```
+if(pilihan[0]=='d' && pilihan[1]=='o'){
+            char nama[100];
+            char download[1024] = {0};
+            scanf("%s", nama);
+            
+            //kirim nama file yang ingin di download
+            send(sock , nama, strlen(nama) , 0 );
+            valread = read( sock , download, 1024);
+            if(strcmp(download,"File tidak ada")==0){
+                printf("%s\n", download);
+            }
+            else{
+                FILE *fptr1, *fptr2;
+                char path1[100];
+                strcpy(path1, download);
+                strcat(path1, "/Server/FILES/");
+                strcat(path1, nama);
+                printf("%s\n", path1);
+
+                //open file mula-mula
+                fptr1 = fopen(path1, "r");
+                if(!fptr1)
+                    printf("fptr1 eror\n");
+
+                //open file tujuan
+                fptr2 = fopen(nama, "a");
+                if(!fptr2)
+                    printf("fptr2 eror\n");    
+
+                //copy
+                char c = fgetc(fptr1);
+                while (c != EOF)
+                {
+                    fputc(c, fptr2);
+                    c = fgetc(fptr1);
+                }
+            }
+
+        }
+```
+
+## perintah `delete`
+client mengirim nama file yang akan di hapus ke server
+```
+ if(pilihan[0]=='d' && pilihan[1]=='e'){
+            char nama[100];
+            scanf("%s", nama);
+
+            //mengirim nama file yang ingin didelete
+            send(sock , nama, strlen(nama) , 0 );
+        }
+```
+
+server menerima nama file kemudian menghapus baris yang berisi nama tersebut pada `files.tsv` dan mengganti nama file pada direktori `Server/FILES/namafile.ekestensi` menjadi `old-namafile.ekstensi`. Server menambah baris pada running.log dengan memanggul fungsi yang telah dibuat
+
+```
+if(pilihan[0]=='d' && pilihan[1]=='e'){
+            char filepath[100], filepath2[100];
+            char nama[1024] = {0};
+
+            //ambil nama file yang mau didelete dari client
+            valread = read( new_socket , nama, 1024);
+
+            //hapus line
+            char line[1024], data_file[1024] ;
+            FILE* srcFile = fopen("files.tsv", "r");
+            FILE* tempFile = fopen("delete-line.tmp", "w");
+            while (fgets(line , sizeof(line) , srcFile )!= NULL)
+            {   
+                if (strstr(line , nama )!= NULL)
+                    continue;  
+                fputs(line, tempFile);
+            }
+            fclose(srcFile);
+            fclose(tempFile);
+            remove("files.tsv");
+            rename("delete-line.tmp", "files.tsv");
+
+            //ganti nama file jadi old
+            strcpy(filepath, "FILES/");
+            strcat(filepath, nama);
+            strcpy(filepath2, "FILES/old-");
+            strcat(filepath2, nama);
+            rename(filepath, filepath2);
+            
+            //tambah running.log
+            addRunning("Hapus", nama, input_akun);
+        }
+```
+
+## perintah `see` dan `find`
+jika perintah `see` server mengirim semua isi dari `files.tsv` sebagai sebuah string ke client
+
+jika perintah `find` server mengirim isi dari `files.tsv` yang tiap barisnya berisi kata yang dicari dari client
+```
+if(pilihan[0]=='s'){
+            char line[1024], data_file[1024] ;
+
+            //mengirim file files.tsc ke client
+            FILE* srcFile = fopen("files.tsv", "r");
+            while (fgets(line , sizeof(line) , srcFile )!= NULL)
+            {   
+                line[strlen(line)]='\0';
+                send(new_socket , line , strlen(line) , 0 );
+            }
+        }
+        if(pilihan[0]=='f'){
+            char word[1024] = {0};
+            char line[1024];
+            //ambil kata yang di cari client
+            valread = read( new_socket , word, 1024);
+
+            //mencari baris yang ada word nya trus kirim ke client
+            FILE* srcFile = fopen("files.tsv", "r");
+            while (fgets(line , sizeof(line) , srcFile )!= NULL)
+            {   
+                if (strstr(line , word)!= NULL){
+                    line[strlen(line)]='\0';
+                    send(new_socket , line , strlen(line) , 0 );
+                }
+            }
+        }
+```
+
+client mencetak string yang telah dikirim server sesuai format yang diinginkan untuk tiap barisnya atau filenya
+```
+if(pilihan[0]=='s' || pilihan[0]=='f'){
+            if(pilihan[0]=='f'){
+                char word[100];
+                scanf("%s", word);
+
+                //mengirim kata yang ingin dicari dalam files.tsv
+                send(sock ,word, strlen(word) , 0 );
+            }
+
+            char line[1024] = {0};
+            char baris[1024];
+            //mengambil isi file files.tsv dari server
+            valread = recv( sock , line, 1024, 0);
+            
+            // menulis sesuai keinginan soall ehehe
+            int n = strlen(line);
+            int i=0;
+            while(1){
+                printf("\nNama: ");
+                while(line[i] != ','){
+                    printf("%c", line[i++]);
+                }
+                i++;
+                printf("\nPublisher: ");
+                while(line[i] != ','){
+                    printf("%c", line[i++]);
+                }
+                i++;
+                printf("\nTahun Publishing: ");
+                while(line[i] != ','){
+                    printf("%c", line[i++]);
+                }
+                i++;
+                printf("\nEkstensi File: ");
+                while(line[i] != ','){
+                    printf("%c", line[i++]);
+                }
+                i++;
+                printf("\nFilepath: ");
+                while((int)line[i] != 10){
+                    printf("%c", line[i++]);
+                }
+                i++;
+                printf("\n");
+                if(i==strlen(line))
+                    break;
+            }
+            printf("\n");
+        }
+```
+
+## menambah `running.log`
+fungsi addRunning() dengan tiga argumen yaitu :
+- `isi1` yaitu string yang berisi tambah atau hapus.
+- `isi2` yaitu string yang berisi nama file yang ditambah atau dihapus.
+- `isi3` yaitu string yang berisi tid dan password client yang menambah atau menghapus.
+
+```
+char addRunning(char* isi1, char* isi2, char* isi3){
+    char isi[100];
+    FILE *frunning;
+    frunning= fopen("running.log","a");
+
+    strcpy(isi, isi1);
+    strcat(isi, " : ");
+    strcat(isi, isi2);
+    strcat(isi, " (");
+    strcat(isi, isi3);
+    strcat(isi, ")");
+
+    fputs(isi, frunning);
+    fputs("\n", frunning);
+    fflush(frunning);
+    fclose(frunning);
+
+}
+```
 ---
 # Soal 2
 Crypto (kamu) adalah teman Loba. Suatu pagi, Crypto melihat Loba yang sedang kewalahan mengerjakan tugas dari bosnya. Karena Crypto adalah orang yang sangat menyukai tantangan, dia ingin membantu Loba mengerjakan tugasnya. Detil dari tugas tersebut adalah:
