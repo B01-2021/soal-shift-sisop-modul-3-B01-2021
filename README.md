@@ -16,12 +16,12 @@ Kelompok B01:
 ---
 
 # Soal 1
-#### perintah 'add'
-mengcopy perkarakter file text dari pathfile yang diinput ke file baru yang dimasukkan ke dalam direktori Server/FILES/nanafile.ekstensi
-lalu membuat sebuah string yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) yang kemudian di mamsukkan ke file files.tsv sebagai sebuah baris
+## Perintah 'add'
+Mengcopy perkarakter file text dari pathfile yang diinput ke file baru yang dimasukkan ke dalam direktori `Server/FILES/nanafile.ekstensi`
+lalu membuat sebuah string yang berisi (nama file, publisher, tahun publikasi, ekstensi, filepath) yang kemudian di mamsukkan ke file `files.tsv` sebagai sebuah baris
 
-#### perintah 'see'
-memasukkan isi files.tsv ke dalam sebuah string lalu kirim ke client untuk di cetak sesuai format keluaran.
+## Perintah 'see'
+Memasukkan isi `files.tsv` ke dalam sebuah string lalu kirim ke client untuk di cetak sesuai format keluaran.
 
 ---
 # Soal 2
@@ -288,3 +288,152 @@ int main(int argc, char **argv)
     return(0);
 }
 ```
+**Output :**
+
+<img src="/soal2/2c.png" width="600">
+
+---
+
+# Soal 3
+Seorang mahasiswa bernama Alex sedang mengalami masa gabut. Di saat masa gabutnya, ia memikirkan untuk merapikan sejumlah file yang ada di laptopnya. Karena jumlah filenya terlalu banyak, Alex meminta saran ke Ayub. Ayub menyarankan untuk membuat sebuah program C agar file-file dapat dikategorikan. Program ini akan memindahkan file sesuai ekstensinya ke dalam folder sesuai ekstensinya yang folder hasilnya terdapat di working directory ketika program kategori tersebut dijalankan.
+## 3a
+Program menerima opsi -f seperti contoh di atas, jadi pengguna bisa menambahkan argumen file yang bisa dikategorikan sebanyak yang diinginkan oleh pengguna. 
+Output yang dikeluarkan adalah seperti ini :
+```
+    File 1 : Berhasil Dikategorikan (jika berhasil)
+    File 2 : Sad, gagal :( (jika gagal)
+    File 3 : Berhasil Dikategorikan
+```
+## 3b
+Program juga dapat menerima opsi -d untuk melakukan pengkategorian pada suatu directory. Namun pada opsi -d ini, user hanya bisa memasukkan input 1 directory saja, tidak seperti file yang bebas menginput file sebanyak mungkin. Contohnya adalah seperti ini:
+```
+    $ ./soal3 -d /path/to/directory/
+```
+Perintah di atas akan mengkategorikan file di /path/to/directory, lalu hasilnya akan disimpan di working directory dimana program C tersebut berjalan (hasil kategori filenya bukan di /path/to/directory).
+Output yang dikeluarkan adalah seperti ini :
+```
+    Jika berhasil, print “Direktori sukses disimpan!”
+    Jika gagal, print “Yah, gagal disimpan :(“
+```
+## 3c
+Selain menerima opsi-opsi di atas, program ini menerima opsi *, contohnya ada di bawah ini:
+```
+    $ ./soal3 \*
+```
+Opsi ini akan mengkategorikan seluruh file yang ada di working directory ketika menjalankan program C tersebut.
+## 3d
+Semua file harus berada di dalam folder, jika terdapat file yang tidak memiliki ekstensi, file disimpan dalam folder “Unknown”. Jika file hidden, masuk folder “Hidden”.
+## 3e
+Setiap 1 file yang dikategorikan dioperasikan oleh 1 thread agar bisa berjalan secara paralel sehingga proses kategori bisa berjalan lebih cepat.
+
+**Jawaban :**
+- Membuat fungsi untuk mengkategorikan
+```
+void categorize(char *arg)
+{
+    char name[500];
+    strcpy(name, arg);
+    char *type;
+
+    if (name[0] == '.')
+    {
+        strcpy(type, "hidden");
+    }
+    else if (strchr(name, '.') == NULL)
+    {
+        strcpy(type, "unknown");
+    }
+    else
+    {
+        type = strtok(name,".");
+        type = strtok(NULL,".");
+    }
+    mkdir(type, S_IRWXU);
+
+    char name2[500];
+    strcpy(name2, arg);
+    char path[500];
+    strcat(path, type);
+    strcat(path,"/");
+    strcat(path,name2);
+    rename(name2,path);
+}
+```
+- Membuat fungsi untuk melist file
+```
+void listFiles(char *path)
+{
+    char fpath[1000];
+
+    struct dirent *dp;
+    DIR *dir = opendir(path);
+
+    char wdir[1000];
+    getcwd(wdir, sizeof(wdir));
+
+    int threads = 0;
+
+    if (!dir)
+        return;
+    while ((dp = readdir(dir)) != NULL)
+    {
+        if (!strcmp(dp->d_name, ".") && !strcmp(dp->d_name, ".."))
+        {
+            strcpy(fpath, path);
+            strcat(fpath, "/");
+            strcat(fpath, dp->d_name);
+            if (dp->d_type == DT_REG)
+            {
+                pthread_create(&tid[threads], NULL, cthread, fpath);
+                threads++;
+            }
+        }
+        else if (dp->d_name[0] != '.')
+            listFiles(fpath);
+    }
+
+    for (size_t i = 0; i < threads; i++)
+    {
+        pthread_join(tid[i], NULL);
+    }
+}
+```
+Dengan definisi fungsi `cthread` sebagai berikut
+```
+void * cthread(void *arg)
+{
+    char *name;
+    strcpy(name, arg);
+    categorize(name);
+}
+
+```
+- Dan menjalankan keseluruhan
+```
+     char wdir[1000];
+    getcwd(wdir, sizeof(wdir));
+
+    if (strcmp(argv[1], "-f") == 0)
+    {
+        int err;
+        int threads = 0;
+        for (size_t i = 2; i < argc; i++)
+        {
+            err = pthread_create(&(tid[i - 2]), NULL, &cthread, argv[i]);
+            if (err)
+                printf("\n Thread create failed");
+            else
+                threads++;
+
+        }
+        for (size_t i = 0; i < threads; i++)
+        {
+            pthread_join(tid[i], NULL);
+        }
+    }
+    else if ((strcmp(argv[1], "-d") == 0))
+        listFiles(argv[2]);
+    else if ((strcmp(argv[1], "\*") == 0))
+        listFiles(wdir);
+```
+
