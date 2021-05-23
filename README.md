@@ -727,111 +727,149 @@ Setiap 1 file yang dikategorikan dioperasikan oleh 1 thread agar bisa berjalan s
 **Jawaban :**
 - Membuat fungsi untuk mengkategorikan
 ```
-void categorize(char *arg)
+void * move(void *path)
 {
-    char name[500];
-    strcpy(name, arg);
-    char *type;
+    char cwd[4096];
+    char dname[200], hidden[100], fname[100];
+    strcpy(hidden, path);
+    char *temp = strrchr(hidden, '/');
+    strcpy(hidden, temp);
 
-    if (name[0] == '.')
+    if (hidden[1] == '.')
     {
-        strcpy(type, "hidden");
+        strcpy(dname, "Hidden");
     }
-    else if (strchr(name, '.') == NULL)
+    else if (strstr(path, ".") != NULL)
     {
-        strcpy(type, "unknown");
+        strcpy(fname, path);
+        strtok(fname, ".");
+        char *token = strtok(NULL, "");
+        int i;
+        for (i = 0; token[i]; i++)
+        {
+            token[i] = tolower(token[i]);
+        }
+        strcpy(dname, token);
     }
     else
     {
-        type = strtok(name,".");
-        type = strtok(NULL,".");
+        strcpy(dname, "Unknown");
     }
-    mkdir(type, S_IRWXU);
 
-    char name2[500];
-    strcpy(name2, arg);
-    char path[500];
-    strcat(path, type);
-    strcat(path,"/");
-    strcat(path,name2);
-    rename(name2,path);
+    if (fileExists(path))
+        mkdir(dname, S_IRWXU);
+
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
+        char *name = strrchr(path, '/');
+        char absPath[200];
+        strcpy(absPath, cwd);
+        strcat(absPath, "/");
+        strcat(absPath, dname);
+        strcat(absPath, name);
+
+        rename(path, absPath);
+    }
 }
 ```
 - Membuat fungsi untuk melist file
 ```
-void listFiles(char *path)
+void listFilesRecursively(char *basePath)
 {
-    char fpath[1000];
-
+    char path[4096];
     struct dirent *dp;
-    DIR *dir = opendir(path);
-
-    char wdir[1000];
-    getcwd(wdir, sizeof(wdir));
-
-    int threads = 0;
+    struct stat buffer;
+    DIR *dir = opendir(basePath);
+    int n = 0;
 
     if (!dir)
         return;
+
     while ((dp = readdir(dir)) != NULL)
     {
-        if (!strcmp(dp->d_name, ".") && !strcmp(dp->d_name, ".."))
+        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
         {
-            strcpy(fpath, path);
-            strcat(fpath, "/");
-            strcat(fpath, dp->d_name);
-            if (dp->d_type == DT_REG)
+            strcpy(path, basePath);
+            strcat(path, "/");
+            strcat(path, dp->d_name);
+
+            if (stat(path, &buffer) == 0 && S_ISREG(buffer.st_mode))
             {
-                pthread_create(&tid[threads], NULL, cthread, fpath);
-                threads++;
+                pthread_t thread;
+                int err = pthread_create(&thread, NULL, move, (void *)path);
+                pthread_join(thread, NULL);
             }
+
+            listFilesRecursively(path);
         }
-        else if (dp->d_name[0] != '.')
-            listFiles(fpath);
     }
-
-    for (size_t i = 0; i < threads; i++)
-    {
-        pthread_join(tid[i], NULL);
-    }
+    closedir(dir);
 }
 ```
-Dengan definisi fungsi `cthread` sebagai berikut
+Dengan definisi fungsi `fileExists` untuk mengecek adanya sebuah file sebagai berikut
 ```
-void * cthread(void *arg)
+int fileExists(const char *fname)
 {
-    char *name;
-    strcpy(name, arg);
-    categorize(name);
+    struct stat buffer;
+    int exist = stat(fname, &buffer);
+    if (exist == 0)
+        return 1;
+    else
+        return 0;
 }
 
 ```
-- Dan menjalankan keseluruhan
+- Keseluruhan program dijalankan dari fungsi `main`
 ```
-     char wdir[1000];
-    getcwd(wdir, sizeof(wdir));
+
+int main(int argc, char *argv[])
+{
+    char cwd[4096];
 
     if (strcmp(argv[1], "-f") == 0)
     {
-        int err;
-        int threads = 0;
-        for (size_t i = 2; i < argc; i++)
+        pthread_t thread;
+        int i;
+        for (i = 2; i < argc; i++)
         {
-            err = pthread_create(&(tid[i - 2]), NULL, &cthread, argv[i]);
-            if (err)
-                printf("\n Thread create failed");
+            if (fileExists(argv[i]))
+            {
+                printf("File %d : Berhasil Dikategorikan\n", i - 1);
+            }
             else
-                threads++;
-
+            {
+                printf("File %d : Sad, gagal :(\n", i - 1);
+            }
+            int err = pthread_create(&thread, NULL, move, (void *)argv[i]);
         }
-        for (size_t i = 0; i < threads; i++)
+        pthread_join(thread, NULL);
+    }
+    else
+    {
+        if (strcmp(argv[1], "*") == 0)
         {
-            pthread_join(tid[i], NULL);
+            if (getcwd(cwd, sizeof(cwd)) != NULL)
+            {
+                listFilesRecursively(cwd);
+            }
+        }
+
+        else if (strcmp(argv[1], "-d") == 0)
+        {
+            listFilesRecursively(argv[2]);
+            struct stat buffer;
+            int err = stat(argv[2], &buffer);
+            if (err == -1)
+            {
+                printf("Yah, gagal disimpan :(\n");
+            }
+            else
+            {
+                printf("Direktori sukses disimpan!\n");
+            }
         }
     }
-    else if ((strcmp(argv[1], "-d") == 0))
-        listFiles(argv[2]);
-    else if ((strcmp(argv[1], "\*") == 0))
-        listFiles(wdir);
+}
+
 ```
 
